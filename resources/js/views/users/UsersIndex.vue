@@ -1,24 +1,24 @@
 <template>
   <div>
     <div class="page-header">
-      <h1 class="page-title">Users</h1>
-      <router-link :to="{ name: 'users.create' }" class="btn-primary">+ Add User</router-link>
+      <h1 class="page-title">Пользователи</h1>
+      <router-link :to="{ name: 'users.create' }" class="btn-primary">+ Добавить</router-link>
     </div>
 
     <div class="card">
-      <div v-if="loading" class="table-state">Loading…</div>
+      <div v-if="loading" class="table-state">Загрузка…</div>
 
-      <div v-else-if="!users.length" class="table-state">No users found.</div>
+      <div v-else-if="!users.length" class="table-state">Пользователи не найдены.</div>
 
       <table v-else class="table">
         <thead>
           <tr>
             <th>#</th>
-            <th>Name</th>
+            <th>Имя</th>
             <th>Email</th>
-            <th>Verified</th>
-            <th>Created</th>
-            <th>Actions</th>
+            <th>Верификация</th>
+            <th>Создан</th>
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -28,36 +28,47 @@
             <td class="col-email">{{ user.email }}</td>
             <td>
               <span :class="['badge', user.email_verified_at ? 'badge--green' : 'badge--gray']">
-                {{ user.email_verified_at ? 'Verified' : 'Unverified' }}
+                {{ user.email_verified_at ? 'Подтверждён' : 'Не подтверждён' }}
               </span>
             </td>
             <td class="col-date">{{ formatDate(user.created_at) }}</td>
             <td class="col-actions">
-              <router-link :to="{ name: 'users.edit', params: { id: user.id } }" class="btn-icon btn-icon--edit" title="Edit">✏️</router-link>
-              <button class="btn-icon btn-icon--delete" title="Delete" @click="confirmDelete(user)">🗑️</button>
+              <router-link :to="{ name: 'users.edit', params: { id: user.id } }" class="btn-icon btn-icon--edit" title="Редактировать">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </router-link>
+              <button class="btn-icon btn-icon--delete" title="Удалить" @click="confirmDelete(user)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
 
       <div v-if="meta && meta.last_page > 1" class="pagination">
-        <button class="page-btn" :disabled="meta.current_page <= 1" @click="loadPage(meta.current_page - 1)">← Prev</button>
-        <span class="page-info">Page {{ meta.current_page }} of {{ meta.last_page }}</span>
-        <button class="page-btn" :disabled="meta.current_page >= meta.last_page" @click="loadPage(meta.current_page + 1)">Next →</button>
+        <button class="page-btn" :disabled="meta.current_page <= 1" @click="loadPage(meta.current_page - 1)">← Назад</button>
+        <span class="page-info">Страница {{ meta.current_page }} из {{ meta.last_page }}</span>
+        <button class="page-btn" :disabled="meta.current_page >= meta.last_page" @click="loadPage(meta.current_page + 1)">Вперёд →</button>
       </div>
     </div>
 
-    <!-- Delete confirmation modal -->
     <div v-if="deleteTarget" class="modal-overlay" @click.self="deleteTarget = null">
       <div class="modal">
-        <h3 class="modal-title">Delete User</h3>
+        <h3 class="modal-title">Удалить пользователя</h3>
         <p class="modal-body">
-          Are you sure you want to delete <strong>{{ deleteTarget.name }}</strong>? This action cannot be undone.
+          Удалить пользователя <strong>{{ deleteTarget.name }}</strong>? Это действие нельзя отменить.
         </p>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="deleteTarget = null">Cancel</button>
+          <button class="btn-secondary" @click="deleteTarget = null">Отмена</button>
           <button class="btn-danger" :disabled="deleting" @click="executeDelete">
-            {{ deleting ? 'Deleting…' : 'Delete' }}
+            {{ deleting ? 'Удаление…' : 'Удалить' }}
           </button>
         </div>
       </div>
@@ -69,11 +80,11 @@
 import { ref, onMounted } from 'vue';
 import api from '@/api';
 
-const users       = ref([]);
-const meta        = ref(null);
-const loading     = ref(true);
+const users        = ref([]);
+const meta         = ref(null);
+const loading      = ref(true);
 const deleteTarget = ref(null);
-const deleting    = ref(false);
+const deleting     = ref(false);
 
 async function loadPage(page = 1) {
     loading.value = true;
@@ -104,7 +115,7 @@ async function executeDelete() {
 
 function formatDate(val) {
     if (!val) return '—';
-    return new Date(val).toLocaleDateString('en-GB', {
+    return new Date(val).toLocaleDateString('ru-RU', {
         day: '2-digit', month: 'short', year: 'numeric',
     });
 }
@@ -166,9 +177,9 @@ onMounted(() => loadPage());
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: #f8fafc; }
 
-.col-id    { color: #94a3b8; font-size: 13px; width: 50px; }
-.col-date  { color: #64748b; font-size: 13px; }
-.col-actions { width: 90px; white-space: nowrap; }
+.col-id      { color: #94a3b8; font-size: 13px; width: 50px; }
+.col-date    { color: #64748b; font-size: 13px; }
+.col-actions { width: 80px; white-space: nowrap; }
 
 .badge {
     display: inline-block;
@@ -190,12 +201,13 @@ onMounted(() => loadPage());
     border: none;
     background: transparent;
     cursor: pointer;
-    font-size: 15px;
     transition: background 0.15s;
     text-decoration: none;
+    color: #64748b;
 }
-.btn-icon--edit:hover   { background: #eff6ff; }
-.btn-icon--delete:hover { background: #fef2f2; }
+.btn-icon svg { width: 14px; height: 14px; }
+.btn-icon--edit:hover   { background: #eff6ff; color: #3b82f6; }
+.btn-icon--delete:hover { background: #fef2f2; color: #ef4444; }
 
 .pagination {
     display: flex;
@@ -220,7 +232,6 @@ onMounted(() => loadPage());
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .page-info { font-size: 13px; color: #64748b; }
 
-/* Modal */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -243,7 +254,6 @@ onMounted(() => loadPage());
 .modal-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
 .modal-body  { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 24px; }
 .modal-body strong { color: #0f172a; }
-
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
 .btn-secondary {

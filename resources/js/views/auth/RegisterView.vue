@@ -1,17 +1,37 @@
 <template>
   <div class="auth-page">
     <div class="auth-card">
-      <h1 class="auth-title">Create Account</h1>
-      <p class="auth-subtitle">Fill in the details below to get started.</p>
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%"   stop-color="#A855F7"/>
+                <stop offset="35%"  stop-color="#EC4899"/>
+                <stop offset="65%"  stop-color="#F59E0B"/>
+                <stop offset="100%" stop-color="#06B6D4"/>
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#lg2)" opacity="0.15"/>
+            <circle cx="16" cy="16" r="10" stroke="url(#lg2)" stroke-width="2" fill="none"/>
+            <circle cx="16" cy="16" r="6"  stroke="url(#lg2)" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <circle cx="16" cy="16" r="2.5" fill="url(#lg2)"/>
+            <path d="M16 6 Q22 11 22 16 Q22 21 16 26 Q10 21 10 16 Q10 11 16 6Z" stroke="url(#lg2)" stroke-width="1" fill="none" opacity="0.5"/>
+          </svg>
+        </div>
+        <span class="auth-brand-name">PHILASTERION</span>
+      </div>
+      <h1 class="auth-title">Регистрация</h1>
+      <p class="auth-subtitle">Приложение для метеочувствительных людей</p>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="field">
-          <label for="name">Full Name</label>
+          <label for="name">Полное имя</label>
           <input
             id="name"
             v-model="form.name"
             type="text"
-            placeholder="John Doe"
+            placeholder="Иван Иванов"
             autocomplete="name"
             required
           />
@@ -19,7 +39,7 @@
         </div>
 
         <div class="field">
-          <label for="email">Email</label>
+          <label for="email">Электронная почта</label>
           <input
             id="email"
             v-model="form.email"
@@ -32,12 +52,12 @@
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
+          <label for="password">Пароль</label>
           <input
             id="password"
             v-model="form.password"
             type="password"
-            placeholder="Min. 8 characters"
+            placeholder="Мин. 8 символов"
             autocomplete="new-password"
             required
           />
@@ -45,12 +65,12 @@
         </div>
 
         <div class="field">
-          <label for="password_confirmation">Confirm Password</label>
+          <label for="password_confirmation">Подтвердите пароль</label>
           <input
             id="password_confirmation"
             v-model="form.password_confirmation"
             type="password"
-            placeholder="Repeat your password"
+            placeholder="Повторите пароль"
             autocomplete="new-password"
             required
           />
@@ -59,14 +79,14 @@
         <div v-if="generalError" class="alert-error">{{ generalError }}</div>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          <span v-if="loading">Creating account…</span>
-          <span v-else>Create Account</span>
+          <span v-if="loading">Создание аккаунта…</span>
+          <span v-else>Создать аккаунт</span>
         </button>
       </form>
 
       <p class="auth-footer">
-        Already have an account?
-        <router-link :to="{ name: 'login' }">Sign In</router-link>
+        Уже есть аккаунт?
+        <router-link :to="{ name: 'login' }">Войти</router-link>
       </p>
     </div>
   </div>
@@ -105,7 +125,7 @@ async function handleSubmit() {
                 Object.entries(errs).map(([k, v]) => [k, v[0]])
             ));
         } else {
-            generalError.value = err.response?.data?.message ?? 'An error occurred.';
+            generalError.value = err.response?.data?.message ?? 'Произошла ошибка.';
         }
     } finally {
         loading.value = false;
@@ -116,7 +136,7 @@ async function handleSubmit() {
 <style scoped>
 .auth-page {
     min-height: 100vh;
-    background: #f1f5f9;
+    background: var(--color-sidebar-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -124,71 +144,72 @@ async function handleSubmit() {
 }
 
 .auth-card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    background: var(--color-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
     padding: 40px;
     width: 100%;
     max-width: 420px;
 }
 
-.auth-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 6px;
-}
-
-.auth-subtitle {
-    font-size: 14px;
-    color: #64748b;
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 28px;
 }
 
+.auth-logo { width: 38px; height: 38px; flex-shrink: 0; }
+.auth-logo svg { width: 100%; height: 100%; }
+
+.auth-brand-name {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--color-primary);
+}
+
+.auth-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 6px; }
+.auth-subtitle { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 28px; }
 .auth-form { display: flex; flex-direction: column; gap: 18px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 13px; font-weight: 600; color: #374151; }
+.field label { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
 .field input {
     padding: 10px 14px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-size: 14px;
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color var(--transition);
 }
-.field input:focus { border-color: #3b82f6; }
-.field-error { font-size: 12px; color: #ef4444; }
+.field input:focus { border-color: var(--color-primary); }
+.field-error { font-size: 12px; color: var(--color-danger); }
 
 .alert-error {
     padding: 10px 14px;
-    background: #fef2f2;
+    background: var(--color-danger-light);
     border: 1px solid #fecaca;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     color: #b91c1c;
     font-size: 13px;
 }
 
 .btn-primary {
     padding: 12px;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--transition);
 }
-.btn-primary:hover:not(:disabled) { background: #2563eb; }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-dark); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.auth-footer {
-    margin-top: 20px;
-    text-align: center;
-    font-size: 13px;
-    color: #64748b;
-}
-.auth-footer a { color: #3b82f6; font-weight: 600; }
+.auth-footer { margin-top: 20px; text-align: center; font-size: 13px; color: var(--color-text-secondary); }
+.auth-footer a { color: var(--color-primary); font-weight: 600; }
 .auth-footer a:hover { text-decoration: underline; }
 </style>

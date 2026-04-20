@@ -9,7 +9,7 @@
       <div v-if="loading" class="table-state">Loading…</div>
 
       <div v-else-if="!jobs.length" class="table-state table-state--success">
-        ✅ No failed jobs. Everything looks good!
+        No failed jobs. Everything looks good.
       </div>
 
       <table v-else class="table">
@@ -31,8 +31,20 @@
             <td><span class="queue-badge">{{ job.queue }}</span></td>
             <td class="col-date">{{ formatDate(job.failed_at) }}</td>
             <td class="col-actions">
-              <button class="btn-icon btn-icon--info" title="View exception" @click="viewJob(job)">🔍</button>
-              <button class="btn-icon btn-icon--delete" title="Delete" @click="confirmDelete(job)">🗑️</button>
+              <button class="btn-icon btn-icon--info" title="View exception" @click="viewJob(job)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <button class="btn-icon btn-icon--delete" title="Delete" @click="confirmDelete(job)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -50,7 +62,11 @@
       <div class="modal modal--wide">
         <div class="modal-header">
           <h3 class="modal-title">Job Exception</h3>
-          <button class="modal-close" @click="viewTarget = null">✕</button>
+          <button class="modal-close" @click="viewTarget = null">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
         <div class="exception-meta">
           <div><strong>UUID:</strong> {{ viewTarget.uuid }}</div>
@@ -102,7 +118,6 @@ async function loadPage(page = 1) {
 }
 
 function viewJob(job) { viewTarget.value = job; }
-
 function confirmDelete(job) { deleteTarget.value = job; }
 
 async function executeDelete() {
@@ -209,11 +224,12 @@ onMounted(() => loadPage());
     border: none;
     background: transparent;
     cursor: pointer;
-    font-size: 15px;
     transition: background 0.15s;
+    color: #64748b;
 }
-.btn-icon--info:hover   { background: #eff6ff; }
-.btn-icon--delete:hover { background: #fef2f2; }
+.btn-icon svg { width: 14px; height: 14px; }
+.btn-icon--info:hover   { background: #eff6ff; color: #3b82f6; }
+.btn-icon--delete:hover { background: #fef2f2; color: #ef4444; }
 
 .pagination {
     display: flex;
@@ -238,7 +254,6 @@ onMounted(() => loadPage());
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .page-info { font-size: 13px; color: #64748b; }
 
-/* Modal */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -273,14 +288,18 @@ onMounted(() => loadPage());
 .modal-body strong { color: #0f172a; }
 
 .modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
     background: none;
     border: none;
-    font-size: 16px;
+    border-radius: 6px;
     cursor: pointer;
     color: #94a3b8;
-    padding: 4px 8px;
-    border-radius: 6px;
 }
+.modal-close svg { width: 16px; height: 16px; }
 .modal-close:hover { background: #f1f5f9; color: #374151; }
 
 .exception-meta {

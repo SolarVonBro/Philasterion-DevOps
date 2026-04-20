@@ -2,39 +2,39 @@
   <div>
     <div class="page-header">
       <div>
-        <h1 class="page-title">{{ isEdit ? 'Edit User' : 'Create User' }}</h1>
-        <p class="page-sub">{{ isEdit ? `Editing user #${route.params.id}` : 'Add a new user to the system.' }}</p>
+        <h1 class="page-title">{{ isEdit ? 'Редактировать пользователя' : 'Создать пользователя' }}</h1>
+        <p class="page-sub">{{ isEdit ? `Редактирование пользователя #${route.params.id}` : 'Добавить нового пользователя в систему.' }}</p>
       </div>
-      <router-link :to="{ name: 'users.index' }" class="btn-back">← Back to Users</router-link>
+      <router-link :to="{ name: 'users.index' }" class="btn-back">← Назад к списку</router-link>
     </div>
 
     <div class="card">
-      <div v-if="fetchLoading" class="form-state">Loading…</div>
+      <div v-if="fetchLoading" class="form-state">Загрузка…</div>
 
       <form v-else @submit.prevent="handleSubmit" class="form">
         <div class="field">
-          <label for="name">Full Name <span class="required">*</span></label>
-          <input id="name" v-model="form.name" type="text" placeholder="John Doe" required />
+          <label for="name">Полное имя <span class="required">*</span></label>
+          <input id="name" v-model="form.name" type="text" placeholder="Иван Иванов" required />
           <span v-if="errors.name" class="field-error">{{ errors.name }}</span>
         </div>
 
         <div class="field">
-          <label for="email">Email Address <span class="required">*</span></label>
-          <input id="email" v-model="form.email" type="email" placeholder="john@example.com" required />
+          <label for="email">Email адрес <span class="required">*</span></label>
+          <input id="email" v-model="form.email" type="email" placeholder="ivan@example.com" required />
           <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
         </div>
 
         <div class="field">
           <label for="password">
-            Password
+            Пароль
             <span v-if="!isEdit" class="required">*</span>
-            <span v-else class="hint">(leave blank to keep current)</span>
+            <span v-else class="hint">(оставьте пустым, чтобы не менять)</span>
           </label>
           <input
             id="password"
             v-model="form.password"
             type="password"
-            placeholder="Min. 8 characters"
+            placeholder="Мин. 8 символов"
             :required="!isEdit"
           />
           <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
@@ -44,9 +44,9 @@
         <div v-if="successMessage" class="alert-success">{{ successMessage }}</div>
 
         <div class="form-actions">
-          <router-link :to="{ name: 'users.index' }" class="btn-secondary">Cancel</router-link>
+          <router-link :to="{ name: 'users.index' }" class="btn-secondary">Отмена</router-link>
           <button type="submit" class="btn-primary" :disabled="saving">
-            {{ saving ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create User') }}
+            {{ saving ? 'Сохранение…' : (isEdit ? 'Сохранить' : 'Создать пользователя') }}
           </button>
         </div>
       </form>
@@ -79,7 +79,7 @@ onMounted(async () => {
         form.name  = data.data.name;
         form.email = data.data.email;
     } catch {
-        generalError.value = 'Failed to load user.';
+        generalError.value = 'Не удалось загрузить пользователя.';
     } finally {
         fetchLoading.value = false;
     }
@@ -97,7 +97,7 @@ async function handleSubmit() {
 
         if (isEdit.value) {
             await api.put(`/users/${route.params.id}`, payload);
-            successMessage.value = 'User updated successfully.';
+            successMessage.value = 'Пользователь успешно обновлён.';
         } else {
             await api.post('/users', { ...payload, password: form.password });
             router.push({ name: 'users.index' });
@@ -109,7 +109,7 @@ async function handleSubmit() {
                 Object.entries(errs).map(([k, v]) => [k, v[0]])
             ));
         } else {
-            generalError.value = err.response?.data?.message ?? 'An error occurred.';
+            generalError.value = err.response?.data?.message ?? 'Произошла ошибка.';
         }
     } finally {
         saving.value = false;

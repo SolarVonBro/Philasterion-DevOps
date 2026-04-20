@@ -25,6 +25,11 @@ const routes = [
                 component: () => import('@/views/DashboardView.vue'),
             },
             {
+                path: 'profile',
+                name: 'profile',
+                component: () => import('@/views/ProfileView.vue'),
+            },
+            {
                 path: 'users',
                 name: 'users.index',
                 component: () => import('@/views/users/UsersIndex.vue'),
@@ -38,11 +43,6 @@ const routes = [
                 path: 'users/:id/edit',
                 name: 'users.edit',
                 component: () => import('@/views/users/UserForm.vue'),
-            },
-            {
-                path: 'failed-jobs',
-                name: 'failed-jobs.index',
-                component: () => import('@/views/failed-jobs/FailedJobsIndex.vue'),
             },
         ],
     },
