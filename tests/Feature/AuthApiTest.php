@@ -66,9 +66,10 @@ test('unauthenticated request is rejected', function () {
 });
 
 test('user can logout', function () {
-    $user = User::factory()->create();
+    $user  = User::factory()->create();
+    $token = $user->createToken('test-token')->plainTextToken;
 
-    $this->actingAs($user, 'sanctum')
+    $this->withToken($token)
          ->postJson('/api/auth/logout')
          ->assertOk();
 });
