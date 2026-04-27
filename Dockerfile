@@ -26,10 +26,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+COPY . .
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 EXPOSE 9000
-ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]
