@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: philasterion
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9113"
+        prometheus.io/path: "/metrics"
+    spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      initContainers:
+      - name: init-app
+        image: ghcr.io/solarvonbro/philasterion-backend:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          cp -r /var/www/html/. /app/ &&
+          php /app/artisan migrate --force
+        envFrom:
+        - configMapRef:
+            name: philasterion-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: DB_PASSWORD
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: APP_KEY
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+      containers:
+      - name: php-fpm
+        image: ghcr.io/solarvonbro/philasterion-backend:latest
+        ports:
+        - containerPort: 9000
+        envFrom:
+        - configMapRef:
+            name: philasterion-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: DB_PASSWORD
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: APP_KEY
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        readinessProbe:
+          exec:
+            command: ["php-fpm", "-t"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+        - name: app-code
+          mountPath: /var/www/html
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+        - name: app-code
+          mountPath: /var/www/html
+      - name: nginx-exporter
+        image: nginx/nginx-prometheus-exporter:latest
+        args:
+        - -nginx.scrape-uri=http://127.0.0.1/nginx_status
+        ports:
+        - containerPort: 9113
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: app-code
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: philasterion
+  labels:
+    app: backend
+spec:
+  selector:
+    app: backend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: metrics
+    port: 9113
+    targetPort: 9113
+  type: NodePort
