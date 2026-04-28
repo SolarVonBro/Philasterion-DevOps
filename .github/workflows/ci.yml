@@ -225,12 +225,12 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Copy env & generate key
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
       - name: Run PHP tests with coverage
-        env:
-          APP_ENV: testing
-          APP_KEY: base64:test-key-for-coverage-only-00000000000=
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"
         run: php artisan test --coverage-clover=coverage.xml
 
       - name: Setup Node.js
