@@ -1,3 +1,17 @@
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /var/www/html
+
+COPY package*.json ./
+RUN npm ci
+
+COPY resources/js ./resources/js
+COPY resources/css ./resources/css
+COPY vite.config.js ./
+COPY public ./public
+
+RUN npm run build
+
 FROM php:8.2-fpm-alpine
 
 RUN apk add --no-cache \
@@ -27,6 +41,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY . .
+COPY --from=frontend-builder /var/www/html/public/build ./public/build
+
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
