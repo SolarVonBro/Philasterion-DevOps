@@ -36,6 +36,8 @@ export const useAuthStore = defineStore('auth', () => {
     async function logout() {
         try {
             await api.post('/auth/logout');
+        } catch {
+            // always clear local state regardless of server response
         } finally {
             _clearToken();
             user.value = null;

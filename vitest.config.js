@@ -15,7 +15,8 @@ export default defineConfig({
             provider: 'v8',
             reporter: ['text', 'lcov'],
             reportsDirectory: './coverage',
-            exclude: ['node_modules/', 'tests/'],
+            include: ['resources/js/**/*.{js,vue}'],
+            exclude: ['resources/js/tests/**', 'resources/js/bootstrap.js', 'resources/js/app.js'],
         },
     },
 });
