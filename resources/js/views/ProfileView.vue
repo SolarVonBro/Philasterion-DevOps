@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="page-title">Мой профиль</h1>
+    <h1 class="page-title">Мой профиль 111</h1>
     <p class="page-sub">{{ auth.user?.name }} &middot; {{ auth.user?.email }}</p>
 
     <!-- ─── Weather ─────────────────────────────────────────── -->
