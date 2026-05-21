@@ -204,9 +204,9 @@ jobs:
           git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
           git push
 
-  sonarcloud:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: self-hosted
     needs: [server-test, client-test]
 
     steps:
@@ -245,16 +245,17 @@ jobs:
       - name: Run JS tests with coverage
         run: npx vitest run --coverage
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
 
   notify-telegram:
     name: Telegram Notification
     runs-on: ubuntu-latest
-    needs: [server-build, server-test, client-build, client-test, sonarcloud, docker-push]
+    needs: [server-build, server-test, client-build, client-test, sonarqube, docker-push]
     if: always()
 
     steps:
@@ -265,7 +266,7 @@ jobs:
                 "${{ needs.server-test.result }}" == "success" && \
                 "${{ needs.client-build.result }}" == "success" && \
                 "${{ needs.client-test.result }}" == "success" && \
-                "${{ needs.sonarcloud.result }}" == "success" && \
+                "${{ needs.sonarqube.result }}" == "success" && \
                 "${{ needs.docker-push.result }}" == "success" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "emoji=✅" >> $GITHUB_OUTPUT
@@ -287,7 +288,7 @@ jobs:
           server-test: ${{ needs.server-test.result }}
           client-build: ${{ needs.client-build.result }}
           client-test: ${{ needs.client-test.result }}
-          sonarcloud: ${{ needs.sonarcloud.result }}
+          sonarqube: ${{ needs.sonarqube.result }}
           docker-push: ${{ needs.docker-push.result }}"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
