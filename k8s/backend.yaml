@@ -24,6 +24,7 @@ spec:
       initContainers:
       - name: init-app
         image: ghcr.io/solarvonbro/philasterion-backend:latest
+        imagePullPolicy: Always
         command: ["/bin/sh", "-c"]
         args:
         - |
@@ -51,6 +52,7 @@ spec:
       containers:
       - name: php-fpm
         image: ghcr.io/solarvonbro/philasterion-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 9000
         envFrom:
