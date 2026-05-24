@@ -164,6 +164,7 @@ jobs:
           context: .
           dockerfile: Dockerfile
           push: true
+          no-cache: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
 
@@ -182,6 +183,7 @@ jobs:
           context: .
           dockerfile: Dockerfile.frontend
           push: true
+          no-cache: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
           build-args: |
