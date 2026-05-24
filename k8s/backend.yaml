@@ -24,10 +24,13 @@ spec:
       initContainers:
       - name: init-app
         image: ghcr.io/solarvonbro/philasterion-backend:latest
+        imagePullPolicy: Always
         command: ["/bin/sh", "-c"]
         args:
         - |
           cp -r /var/www/html/. /app/ &&
+          chown -R www-data:www-data /app/storage /app/bootstrap/cache &&
+          chmod -R 775 /app/storage /app/bootstrap/cache &&
           php /app/artisan migrate --force
         envFrom:
         - configMapRef:
@@ -49,6 +52,7 @@ spec:
       containers:
       - name: php-fpm
         image: ghcr.io/solarvonbro/philasterion-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 9000
         envFrom:
