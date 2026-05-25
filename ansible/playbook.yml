@@ -3,11 +3,22 @@
   hosts: vm
   become: yes
 
+  vars:
+    app_dir: /opt/philasterion
+    github_username: solarvonbro
+    db_database: laravel_devops
+    db_username: laravel
+    db_password: secret
+    db_root_password: root_secret
+    # Sensitive — pass via CLI:
+    #   --extra-vars "github_token=ghp_... app_key=base64:..."
+
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
+      tags: docker
 
     - name: Install prerequisites
       apt:
@@ -19,17 +30,20 @@
           - lsb-release
           - python3-pip
         state: present
+      tags: docker
 
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+      tags: docker
 
     - name: Add Docker repository
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
         update_cache: yes
+      tags: docker
 
     - name: Install Docker Engine
       apt:
@@ -40,25 +54,117 @@
           - docker-buildx-plugin
           - docker-compose-plugin
         state: present
+      tags: docker
 
     - name: Start Docker service
       service:
         name: docker
         state: started
         enabled: yes
-      ignore_errors: yes
+      tags: docker
 
     - name: Add ubuntu user to docker group
       user:
         name: ubuntu
         groups: docker
         append: yes
+      tags: docker
 
     - name: Verify Docker installation
       command: docker --version
       register: docker_version
       become: no
+      tags: docker
 
     - name: Print Docker version
       debug:
         msg: "Docker installed: {{ docker_version.stdout }}"
+      tags: docker
+
+    # --- Deploy application ---
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}/docker/nginx"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+        recurse: yes
+      tags: deploy
+
+    - name: Copy docker-compose.prod.yml
+      copy:
+        src: ../docker-compose.prod.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+      tags: deploy
+
+    - name: Copy nginx config
+      copy:
+        src: ../docker/nginx/default.conf
+        dest: "{{ app_dir }}/docker/nginx/default.conf"
+        owner: ubuntu
+        group: ubuntu
+      tags: deploy
+
+    - name: Create .env from template
+      template:
+        src: templates/env.j2
+        dest: "{{ app_dir }}/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0640"
+      tags: deploy
+
+    - name: Log in to GitHub Container Registry
+      shell: echo "{{ github_token }}" | docker login ghcr.io -u {{ github_username }} --password-stdin
+      no_log: true
+      tags: deploy
+
+    - name: Pull latest images from GHCR
+      shell: docker compose pull
+      args:
+        chdir: "{{ app_dir }}"
+      tags: deploy
+
+    - name: Start application containers
+      shell: docker compose up -d --remove-orphans
+      args:
+        chdir: "{{ app_dir }}"
+      tags: deploy
+
+    - name: Wait for DB to become healthy
+      shell: docker compose ps db | grep "(healthy)"
+      args:
+        chdir: "{{ app_dir }}"
+      register: db_health
+      until: db_health.rc == 0
+      retries: 24
+      delay: 5
+      tags: deploy
+
+    - name: Run Laravel migrations
+      shell: docker compose exec -T app php artisan migrate --force
+      args:
+        chdir: "{{ app_dir }}"
+      tags: deploy
+
+    - name: Fix storage permissions
+      shell: docker compose exec -T app chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+      args:
+        chdir: "{{ app_dir }}"
+      tags: deploy
+
+    - name: Show running containers
+      shell: docker compose ps
+      args:
+        chdir: "{{ app_dir }}"
+      register: containers_status
+      tags: deploy
+
+    - name: Print containers status
+      debug:
+        msg: "{{ containers_status.stdout_lines }}"
+      tags: deploy

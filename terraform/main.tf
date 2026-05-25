@@ -1,51 +1,36 @@
 terraform {
   required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0"
+    multipass = {
+      source  = "larstobi/multipass"
+      version = "~> 1.4"
     }
   }
 }
 
-provider "docker" {}
+provider "multipass" {}
 
-resource "docker_image" "vm_image" {
-  name = "philasterion-vm:latest"
-
-  build {
-    context    = "${path.module}/vm-image"
-    dockerfile = "Dockerfile"
-    build_args = {
-      SSH_PUBLIC_KEY = trimspace(file(pathexpand("~/.ssh/philasterion.pub")))
-    }
-    force_remove = true
-  }
-
-  triggers = {
-    dockerfile = filesha256("${path.module}/vm-image/Dockerfile")
-  }
+resource "local_file" "cloud_init" {
+  content = templatefile("${path.module}/cloud-init.tpl", {
+    ssh_public_key = trimspace(file(pathexpand(var.ssh_key_path)))
+  })
+  filename = "${path.module}/cloud-init.yml"
 }
 
-resource "docker_container" "philasterion_vm" {
-  image      = docker_image.vm_image.image_id
-  name       = "philasterion-vm"
-  restart    = "unless-stopped"
-  privileged = true
+resource "multipass_instance" "philasterion_vm" {
+  name           = "philasterion-vm"
+  image          = "22.04"
+  cpus           = 2
+  memory         = "2G"
+  disk           = "10G"
+  cloudinit_file = local_file.cloud_init.filename
 
-  ports {
-    internal = 22
-    external = 2222
-  }
+  depends_on = [local_file.cloud_init]
 }
 
-output "vm_ssh_host" {
-  value = "localhost"
-}
-
-output "vm_ssh_port" {
-  value = 2222
-}
-
-output "vm_connect" {
-  value = "ssh -i ~/.ssh/philasterion -p 2222 ubuntu@localhost"
+resource "local_file" "ansible_inventory" {
+  content  = <<-EOT
+    [vm]
+    philasterion-vm ansible_host=${multipass_instance.philasterion_vm.ipv4} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/philasterion ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+  EOT
+  filename = "${path.module}/../ansible/inventory.ini"
 }
