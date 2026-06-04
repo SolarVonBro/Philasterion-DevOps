@@ -135,7 +135,7 @@ onMounted(() => loadPage());
 
 .btn-primary {
     padding: 9px 18px;
-    background: #3b82f6;
+    background: #2563eb;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -145,7 +145,7 @@ onMounted(() => loadPage());
     transition: background 0.15s;
     text-decoration: none;
 }
-.btn-primary:hover { background: #2563eb; }
+.btn-primary:hover { background: #1d4ed8; }
 
 .card {
     background: #fff;
@@ -189,7 +189,7 @@ onMounted(() => loadPage());
     font-weight: 500;
 }
 .badge--green { background: #dcfce7; color: #15803d; }
-.badge--gray  { background: #f1f5f9; color: #64748b; }
+.badge--gray  { background: #f1f5f9; color: #4b5563; }
 
 .btn-icon {
     display: inline-flex;
@@ -206,8 +206,8 @@ onMounted(() => loadPage());
     color: #64748b;
 }
 .btn-icon svg { width: 14px; height: 14px; }
-.btn-icon--edit:hover   { background: #eff6ff; color: #3b82f6; }
-.btn-icon--delete:hover { background: #fef2f2; color: #ef4444; }
+.btn-icon--edit:hover   { background: #eff6ff; color: #1d4ed8; }
+.btn-icon--delete:hover { background: #fef2f2; color: #b91c1c; }
 
 .pagination {
     display: flex;

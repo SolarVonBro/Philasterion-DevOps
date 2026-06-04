@@ -228,8 +228,8 @@ onMounted(() => loadPage());
     color: #64748b;
 }
 .btn-icon svg { width: 14px; height: 14px; }
-.btn-icon--info:hover   { background: #eff6ff; color: #3b82f6; }
-.btn-icon--delete:hover { background: #fef2f2; color: #ef4444; }
+.btn-icon--info:hover   { background: #eff6ff; color: #1d4ed8; }
+.btn-icon--delete:hover { background: #fef2f2; color: #b91c1c; }
 
 .pagination {
     display: flex;
@@ -344,7 +344,7 @@ onMounted(() => loadPage());
 
 .btn-danger {
     padding: 9px 18px;
-    background: #ef4444;
+    background: #dc2626;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -353,6 +353,6 @@ onMounted(() => loadPage());
     cursor: pointer;
     transition: background 0.15s;
 }
-.btn-danger:hover:not(:disabled) { background: #dc2626; }
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
 .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

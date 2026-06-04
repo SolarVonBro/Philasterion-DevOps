@@ -85,13 +85,13 @@
         <h3 class="form-title">{{ diary.editId ? 'Редактировать запись' : 'Новая запись' }}</h3>
         <div class="form-grid">
           <div class="field">
-            <label>Дата</label>
-            <input v-model="diary.form.recorded_at" type="date" class="field-input" />
+            <label for="diary-date">Дата</label>
+            <input id="diary-date" v-model="diary.form.recorded_at" type="date" class="field-input" />
             <span v-if="diary.errors.recorded_at" class="field-error">{{ diary.errors.recorded_at }}</span>
           </div>
 
           <div class="field">
-            <label>Настроение <span class="field-range">1–5</span></label>
+            <div class="field-label">Настроение <span class="field-range">1–5</span></div>
             <div class="scale-row">
               <button
                 v-for="n in 5" :key="n"
@@ -104,7 +104,7 @@
           </div>
 
           <div class="field">
-            <label>Энергия <span class="field-range">1–10</span></label>
+            <div class="field-label">Энергия <span class="field-range">1–10</span></div>
             <div class="scale-row">
               <button
                 v-for="n in 10" :key="n"
@@ -117,14 +117,14 @@
           </div>
 
           <div class="field">
-            <label>Сон (часы)</label>
-            <input v-model.number="diary.form.sleep_hours" type="number" min="0" max="24" step="0.5" placeholder="7.5" class="field-input field-input--short" />
+            <label for="diary-sleep">Сон (часы)</label>
+            <input id="diary-sleep" v-model.number="diary.form.sleep_hours" type="number" min="0" max="24" step="0.5" placeholder="7.5" class="field-input field-input--short" />
             <span v-if="diary.errors.sleep_hours" class="field-error">{{ diary.errors.sleep_hours }}</span>
           </div>
 
           <div class="field field--full">
-            <label>Заметки</label>
-            <textarea v-model="diary.form.notes" rows="3" placeholder="Как вы себя чувствуете сегодня?" class="field-input field-textarea" />
+            <label for="diary-notes">Заметки</label>
+            <textarea id="diary-notes" v-model="diary.form.notes" rows="3" placeholder="Как вы себя чувствуете сегодня?" class="field-input field-textarea" />
           </div>
         </div>
 
@@ -569,7 +569,7 @@ onMounted(() => {
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field--full { grid-column: 1 / -1; }
-.field label { font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); }
+.field label, .field .field-label { font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); }
 .field-range { font-weight: 400; color: var(--color-text-muted); margin-left: 4px; }
 
 .field-input {

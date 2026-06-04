@@ -197,7 +197,7 @@ async function handleSubmit() {
 
 .btn-primary {
     padding: 10px 22px;
-    background: #3b82f6;
+    background: #2563eb;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -206,7 +206,7 @@ async function handleSubmit() {
     cursor: pointer;
     transition: background 0.15s;
 }
-.btn-primary:hover:not(:disabled) { background: #2563eb; }
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-secondary {

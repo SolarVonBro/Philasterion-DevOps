@@ -2,6 +2,16 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import api from '@/api';
 
+function _setToken(token) {
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+function _clearToken() {
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
+}
+
 export const useAuthStore = defineStore('auth', () => {
     const user        = ref(null);
     const initialized = ref(false);
@@ -42,16 +52,6 @@ export const useAuthStore = defineStore('auth', () => {
             _clearToken();
             user.value = null;
         }
-    }
-
-    function _setToken(token) {
-        localStorage.setItem('token', token);
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-
-    function _clearToken() {
-        localStorage.removeItem('token');
-        delete api.defaults.headers.common['Authorization'];
     }
 
     return { user, initialized, init, login, register, logout };
