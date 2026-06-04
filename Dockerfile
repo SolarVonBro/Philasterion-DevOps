@@ -41,6 +41,9 @@ COPY --from=vendor /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
 
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 9000
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]
