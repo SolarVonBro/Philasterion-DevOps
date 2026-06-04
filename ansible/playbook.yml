@@ -107,6 +107,14 @@
         dest: "{{ app_dir }}/docker/nginx/default.conf"
         owner: ubuntu
         group: ubuntu
+      register: nginx_conf
+      tags: deploy
+
+    - name: Restart nginx if config changed
+      shell: docker compose restart nginx
+      args:
+        chdir: "{{ app_dir }}"
+      when: nginx_conf.changed
       tags: deploy
 
     - name: Create .env from template
