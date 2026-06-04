@@ -1,11 +1,20 @@
 #!/bin/bash
 set -e
 
-echo "==> Installing Composer dependencies..."
-composer install --no-interaction --prefer-dist --optimize-autoloader
+if [ ! -f .env ]; then
+    echo "==> Copying .env.example to .env..."
+    cp .env.example .env
+fi
 
-echo "==> Generating application key..."
-php artisan key:generate --force
+if command -v composer > /dev/null 2>&1; then
+    echo "==> Installing Composer dependencies..."
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+fi
+
+if grep -q "^APP_KEY=$" .env; then
+    echo "==> Generating application key..."
+    php artisan key:generate --force
+fi
 
 echo "==> Running migrations..."
 php artisan migrate --force
