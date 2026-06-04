@@ -270,7 +270,7 @@ onMounted(() => loadPage());
 
 .btn-danger {
     padding: 9px 18px;
-    background: #ef4444;
+    background: #dc2626;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -279,6 +279,6 @@ onMounted(() => loadPage());
     cursor: pointer;
     transition: background 0.15s;
 }
-.btn-danger:hover:not(:disabled) { background: #dc2626; }
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
 .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
