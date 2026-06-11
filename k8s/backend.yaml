@@ -71,10 +71,10 @@ spec:
               key: APP_KEY
         resources:
           requests:
-            cpu: 100m
+            cpu: 30m
             memory: 256Mi
           limits:
-            cpu: 500m
+            cpu: 300m
             memory: 512Mi
         readinessProbe:
           exec:
@@ -90,10 +90,10 @@ spec:
         - containerPort: 80
         resources:
           requests:
-            cpu: 50m
+            cpu: 10m
             memory: 64Mi
           limits:
-            cpu: 200m
+            cpu: 100m
             memory: 128Mi
         volumeMounts:
         - name: nginx-config

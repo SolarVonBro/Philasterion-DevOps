@@ -21,6 +21,20 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: philasterion-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: DB_PASSWORD
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: philasterion-secrets
+              key: APP_KEY
         resources:
           requests:
             cpu: 50m
