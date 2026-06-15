@@ -71,10 +71,10 @@ spec:
               key: APP_KEY
         resources:
           requests:
-            cpu: 30m
+            cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 300m
+            cpu: 500m
             memory: 512Mi
         readinessProbe:
           exec:
