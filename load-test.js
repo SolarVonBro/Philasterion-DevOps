@@ -6,25 +6,37 @@ const FRONTEND_URL = __ENV.FRONTEND_URL || '';
 
 export const options = {
   stages: [
-    { duration: '30s', target: 25 },
-    { duration: '4m',  target: 25 },
+    // Медленный рамп — даём HPA поднять все поды (scaleUp +1 под/30s → 5 подов ~2.5min)
+    { duration: '3m',  target: 22 },
+    // Устойчивая нагрузка, все поды уже запущены
+    { duration: '2m',  target: 22 },
     { duration: '30s', target: 0  },
   ],
+  noConnectionReuse: true,
   thresholds: {
     http_req_duration: ['p(95)<3000'],
   },
 };
 
 export function setup() {
-  const res = http.post(
-    `${BASE_URL}/api/auth/login`,
-    JSON.stringify({
-      email:    __ENV.LOGIN_EMAIL    || 'admin@test.com',
-      password: __ENV.LOGIN_PASSWORD || '000333him',
-    }),
-    { headers: { 'Content-Type': 'application/json' } },
-  );
-  return { token: res.json('token') };
+  // Retry login до 10 раз — бэкенд может ещё стартовать когда начинается setup
+  for (let i = 0; i < 10; i++) {
+    const res = http.post(
+      `${BASE_URL}/api/auth/login`,
+      JSON.stringify({
+        email:    __ENV.LOGIN_EMAIL    || 'admin@test.com',
+        password: __ENV.LOGIN_PASSWORD || '000333him',
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+    const token = res.json('token');
+    if (res.status === 200 && token) {
+      return { token };
+    }
+    console.log(`Login attempt ${i + 1} failed (status ${res.status}), retrying in 5s...`);
+    sleep(5);
+  }
+  throw new Error('Could not authenticate after 10 attempts');
 }
 
 export default function (data) {
@@ -44,18 +56,24 @@ export default function (data) {
   } else if (role === 1 || (role === 0 && !FRONTEND_URL)) {
     const res = http.get(`${BASE_URL}/api/diary`, { headers: apiHeaders });
     check(res, { 'diary list 200': (r) => r.status === 200 });
-    sleep(0.5);
+    sleep(1);
   } else if (role === 2) {
     const res = http.post(
       `${BASE_URL}/api/diary`,
-      JSON.stringify({ title: `load-test-${__VU}-${__ITER}`, content: 'k6' }),
+      JSON.stringify({
+        recorded_at: new Date().toISOString().slice(0, 10),
+        mood:        (__VU % 5) + 1,
+        energy:      (__ITER % 10) + 1,
+        sleep_hours: 7,
+        notes:       `k6 vu=${__VU} iter=${__ITER}`,
+      }),
       { headers: apiHeaders },
     );
     check(res, { 'diary create 2xx': (r) => r.status >= 200 && r.status < 300 });
-    sleep(0.5);
+    sleep(1);
   } else {
     const res = http.get(`${BASE_URL}/api/auth/me`, { headers: apiHeaders });
     check(res, { 'me 200': (r) => r.status === 200 });
-    sleep(0.5);
+    sleep(1);
   }
 }

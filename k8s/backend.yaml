@@ -71,7 +71,7 @@ spec:
               key: APP_KEY
         resources:
           requests:
-            cpu: 100m
+            cpu: 150m
             memory: 256Mi
           limits:
             cpu: 500m
@@ -79,7 +79,7 @@ spec:
         readinessProbe:
           exec:
             command: ["php-fpm", "-t"]
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 10
         volumeMounts:
         - name: app-code
