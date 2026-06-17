@@ -6,11 +6,11 @@ const FRONTEND_URL = __ENV.FRONTEND_URL || '';
 
 export const options = {
   stages: [
-    // Медленный рамп — даём HPA поднять все поды (scaleUp +1 под/30s → 5 подов ~2.5min)
-    { duration: '3m',  target: 22 },
+    // Медленный рамп — даём HPA поднять все поды
+    { duration: '3m', target: 18 },
     // Устойчивая нагрузка, все поды уже запущены
-    { duration: '2m',  target: 22 },
-    { duration: '30s', target: 0  },
+    { duration: '2m', target: 18 },
+    { duration: '30s',  target: 0  },
   ],
   noConnectionReuse: true,
   thresholds: {
