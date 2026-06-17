@@ -6,21 +6,18 @@ const FRONTEND_URL = __ENV.FRONTEND_URL || '';
 
 export const options = {
   stages: [
-    // Медленный рамп — даём HPA поднять все поды
-    { duration: '3m', target: 18 },
-    // Устойчивая нагрузка, все поды уже запущены
-    { duration: '2m', target: 18 },
-    { duration: '30s',  target: 0  },
+    { duration: '1m30s', target: 6 },  // плавный рост — HPA замечает нагрузку
+    { duration: '3m30s', target: 6 },  // держим — HPA окно 90с + старт пода ~60с
+    { duration: '30s',   target: 0 },  // сброс
   ],
-  noConnectionReuse: true,
   thresholds: {
     http_req_duration: ['p(95)<3000'],
   },
 };
 
 export function setup() {
-  // Retry login до 10 раз — бэкенд может ещё стартовать когда начинается setup
-  for (let i = 0; i < 10; i++) {
+  // Retry login до 15 раз — контейнер стартует ~60с, 15×5=75с покрывает это с запасом
+  for (let i = 0; i < 15; i++) {
     const res = http.post(
       `${BASE_URL}/api/auth/login`,
       JSON.stringify({
@@ -36,7 +33,7 @@ export function setup() {
     console.log(`Login attempt ${i + 1} failed (status ${res.status}), retrying in 5s...`);
     sleep(5);
   }
-  throw new Error('Could not authenticate after 10 attempts');
+  throw new Error('Could not authenticate after 15 attempts');
 }
 
 export default function (data) {
@@ -46,18 +43,19 @@ export default function (data) {
     'Authorization': `Bearer ${data.token}`,
   };
 
-  // VU роли: 0=frontend, 1=list, 2=create, 3=profile
-  const role = __VU % 4;
+  // Распределение ролей по 6 VU:
+  //   0        → frontend (без MySQL)
+  //   1, 2, 3  → diary list (лёгкий SELECT)
+  //   4        → auth/me   (SELECT по PK, самый дешёвый)
+  //   5        → create, но только каждую 4-ю итерацию — иначе list
+  const role = __VU % 6;
 
   if (role === 0 && FRONTEND_URL) {
     const res = http.get(`${FRONTEND_URL}/`, { headers: { 'Accept': 'text/html' } });
     check(res, { 'frontend 200': (r) => r.status === 200 });
-    sleep(1);
-  } else if (role === 1 || (role === 0 && !FRONTEND_URL)) {
-    const res = http.get(`${BASE_URL}/api/diary`, { headers: apiHeaders });
-    check(res, { 'diary list 200': (r) => r.status === 200 });
-    sleep(1);
-  } else if (role === 2) {
+    sleep(2);
+  } else if (role === 5 && __ITER % 4 === 0) {
+    // INSERT — не чаще 1 раза на 4 итерации (~1 запись каждые 16-20 сек на VU)
     const res = http.post(
       `${BASE_URL}/api/diary`,
       JSON.stringify({
@@ -70,10 +68,15 @@ export default function (data) {
       { headers: apiHeaders },
     );
     check(res, { 'diary create 2xx': (r) => r.status >= 200 && r.status < 300 });
-    sleep(1);
-  } else {
+    sleep(4);
+  } else if (role === 4) {
     const res = http.get(`${BASE_URL}/api/auth/me`, { headers: apiHeaders });
     check(res, { 'me 200': (r) => r.status === 200 });
-    sleep(1);
+    sleep(2);
+  } else {
+    // role 1,2,3 + role 0 без FRONTEND_URL + role 5 на "пустых" итерациях
+    const res = http.get(`${BASE_URL}/api/diary`, { headers: apiHeaders });
+    check(res, { 'diary list 200': (r) => r.status === 200 });
+    sleep(2);
   }
 }
