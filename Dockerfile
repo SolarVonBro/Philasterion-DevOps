@@ -1,15 +1,16 @@
-FROM node:20-alpine AS frontend-builder
-
+FROM composer:2 AS vendor
 WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs --no-scripts
 
+FROM node:20-alpine AS assets
+WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-
 COPY resources/js ./resources/js
 COPY resources/css ./resources/css
 COPY vite.config.js ./
 COPY vitest.config.js ./
-
 RUN npm run build
 
 FROM php:8.2-fpm-alpine
@@ -36,13 +37,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         zip \
         opcache
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /var/www/html
 
 COPY . .
-COPY --from=frontend-builder /app/public/build ./public/build
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=assets /app/public/build ./public/build
 
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
 
