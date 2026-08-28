@@ -38,6 +38,8 @@ metadata:
   namespace: sonarqube
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: sonarqube
@@ -90,6 +92,7 @@ spec:
             port: 9000
           initialDelaySeconds: 90
           periodSeconds: 20
+          timeoutSeconds: 10
           failureThreshold: 10
         livenessProbe:
           httpGet:
@@ -97,6 +100,7 @@ spec:
             port: 9000
           initialDelaySeconds: 150
           periodSeconds: 30
+          timeoutSeconds: 10
           failureThreshold: 5
         securityContext:
           runAsUser: 1000
