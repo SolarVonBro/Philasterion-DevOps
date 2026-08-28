@@ -190,7 +190,7 @@ jobs:
             VITE_API_URL=http://backend-service
 
       - name: Update k8s manifests with new image tag
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/lab4'
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -198,7 +198,7 @@ jobs:
           sed -i "s|ghcr.io/${OWNER_LOWER}/philasterion-frontend:.*|ghcr.io/${OWNER_LOWER}/philasterion-frontend:${SHORT_SHA}|g" k8s/frontend.yaml
 
       - name: Commit updated manifests
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/lab4'
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
