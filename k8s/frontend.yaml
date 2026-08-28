@@ -18,7 +18,7 @@ spec:
       - name: ghcr-secret
       containers:
       - name: frontend
-        image: ghcr.io/solarvonbro/philasterion-frontend:e489b77
+        image: ghcr.io/solarvonbro/philasterion-frontend:b8290a5
         imagePullPolicy: Always
         ports:
         - containerPort: 80
