@@ -135,7 +135,7 @@ jobs:
     needs: [server-test, client-test]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/lab2' || github.ref == 'refs/heads/lab3' || github.ref == 'refs/heads/lab4'
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
