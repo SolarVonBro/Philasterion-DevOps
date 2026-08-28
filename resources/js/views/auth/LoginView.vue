@@ -22,7 +22,7 @@
         <span class="auth-brand-name">PHILASTERION</span>
       </div>
       <h1 class="auth-title">Вход</h1>
-      <p class="auth-subtitle">Твоя погода · твоё самочувствие · твои помощники (ArgoCD CD demo)</p>
+      <p class="auth-subtitle">Твоя погода · твоё самочувствие · твои помощники</p>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="field">
