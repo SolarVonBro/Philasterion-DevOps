@@ -253,11 +253,56 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
+  argocd-sync:
+    name: Verify ArgoCD Deployment
+    runs-on: self-hosted
+    needs: docker-push
+    if: github.ref == 'refs/heads/lab4'
+    timeout-minutes: 8
+    outputs:
+      detail: ${{ steps.wait.outputs.detail }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: lab4
+
+      - name: Wait for ArgoCD to sync and become healthy
+        id: wait
+        run: |
+          TARGET_SHA=$(git rev-parse HEAD)
+          SHORT_SHA=$(echo "$TARGET_SHA" | cut -c1-7)
+          echo "Waiting for ArgoCD to reach revision $TARGET_SHA"
+
+          TIMEOUT=300
+          INTERVAL=10
+          ELAPSED=0
+          SYNC="Unknown"
+          HEALTH="Unknown"
+
+          while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+            REV=$(kubectl get application philasterion -n argocd -o jsonpath='{.status.sync.revision}' 2>/dev/null || echo "")
+            SYNC=$(kubectl get application philasterion -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
+            HEALTH=$(kubectl get application philasterion -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
+            echo "  [$ELAPSED s] revision=$REV sync=$SYNC health=$HEALTH"
+
+            if [ "$REV" = "$TARGET_SHA" ] && [ "$SYNC" = "Synced" ] && [ "$HEALTH" = "Healthy" ]; then
+              echo "detail=Synced and Healthy on ${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            sleep "$INTERVAL"
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          echo "detail=Timeout waiting for ArgoCD (sync=${SYNC}, health=${HEALTH})" >> "$GITHUB_OUTPUT"
+          exit 1
 
   notify-telegram:
     name: Telegram Notification
     runs-on: ubuntu-latest
-    needs: [server-build, server-test, client-build, client-test, sonarqube, docker-push]
+    needs: [server-build, server-test, client-build, client-test, sonarqube, docker-push, argocd-sync]
     if: always()
 
     steps:
@@ -269,7 +314,8 @@ jobs:
                 "${{ needs.client-build.result }}" == "success" && \
                 "${{ needs.client-test.result }}" == "success" && \
                 "${{ needs.sonarqube.result }}" == "success" && \
-                "${{ needs.docker-push.result }}" == "success" ]]; then
+                "${{ needs.docker-push.result }}" == "success" && \
+                ( "${{ needs.argocd-sync.result }}" == "success" || "${{ needs.argocd-sync.result }}" == "skipped" ) ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "emoji=✅" >> $GITHUB_OUTPUT
           else
@@ -280,6 +326,14 @@ jobs:
       - name: Send Telegram notification
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          CD_LINE="CD (ArgoCD): not applicable on this branch"
+          if [[ "${{ needs.argocd-sync.result }}" == "success" ]]; then
+            CD_LINE="CD (ArgoCD): ✅ ${{ needs.argocd-sync.outputs.detail }}"
+          elif [[ "${{ needs.argocd-sync.result }}" == "failure" || "${{ needs.argocd-sync.result }}" == "cancelled" ]]; then
+            CD_LINE="CD (ArgoCD): ❌ ${{ needs.argocd-sync.outputs.detail }}"
+          fi
+
           MESSAGE="${{ steps.status.outputs.emoji }} <b>Philasterion CI/CD</b>
 
           Branch: ${{ github.ref_name }}
@@ -291,7 +345,8 @@ jobs:
           client-build: ${{ needs.client-build.result }}
           client-test: ${{ needs.client-test.result }}
           sonarqube: ${{ needs.sonarqube.result }}
-          docker-push: ${{ needs.docker-push.result }}"
+          docker-push: ${{ needs.docker-push.result }}
+          ${CD_LINE}"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
