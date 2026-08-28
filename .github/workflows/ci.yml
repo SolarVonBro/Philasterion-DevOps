@@ -299,14 +299,16 @@ jobs:
           echo "detail=Timeout waiting for ArgoCD (sync=${SYNC}, health=${HEALTH})" >> "$GITHUB_OUTPUT"
           exit 1
 
-  notify-telegram:
-    name: Telegram Notification
+  notify-telegram-ci:
+    name: Telegram Notification (CI)
     runs-on: ubuntu-latest
-    needs: [server-build, server-test, client-build, client-test, sonarqube, docker-push, argocd-sync]
+    needs: [server-build, server-test, client-build, client-test, sonarqube, docker-push]
     if: always()
+    outputs:
+      ci_success: ${{ steps.status.outputs.status == 'success' }}
 
     steps:
-      - name: Determine overall status
+      - name: Determine CI status
         id: status
         run: |
           if [[ "${{ needs.server-build.result }}" == "success" && \
@@ -314,8 +316,7 @@ jobs:
                 "${{ needs.client-build.result }}" == "success" && \
                 "${{ needs.client-test.result }}" == "success" && \
                 "${{ needs.sonarqube.result }}" == "success" && \
-                "${{ needs.docker-push.result }}" == "success" && \
-                ( "${{ needs.argocd-sync.result }}" == "success" || "${{ needs.argocd-sync.result }}" == "skipped" ) ]]; then
+                "${{ needs.docker-push.result }}" == "success" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "emoji=✅" >> $GITHUB_OUTPUT
           else
@@ -323,18 +324,10 @@ jobs:
             echo "emoji=❌" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send Telegram notification
+      - name: Send Telegram CI notification
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-
-          CD_LINE="CD (ArgoCD): not applicable on this branch"
-          if [[ "${{ needs.argocd-sync.result }}" == "success" ]]; then
-            CD_LINE="CD (ArgoCD): ✅ ${{ needs.argocd-sync.outputs.detail }}"
-          elif [[ "${{ needs.argocd-sync.result }}" == "failure" || "${{ needs.argocd-sync.result }}" == "cancelled" ]]; then
-            CD_LINE="CD (ArgoCD): ❌ ${{ needs.argocd-sync.outputs.detail }}"
-          fi
-
-          MESSAGE="${{ steps.status.outputs.emoji }} <b>Philasterion CI/CD</b>
+          MESSAGE="${{ steps.status.outputs.emoji }} <b>Philasterion CI</b>
 
           Branch: ${{ github.ref_name }}
           Commit: ${SHORT_SHA}
@@ -345,8 +338,40 @@ jobs:
           client-build: ${{ needs.client-build.result }}
           client-test: ${{ needs.client-test.result }}
           sonarqube: ${{ needs.sonarqube.result }}
-          docker-push: ${{ needs.docker-push.result }}
-          ${CD_LINE}"
+          docker-push: ${{ needs.docker-push.result }}"
+
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\", \"text\": \"${MESSAGE}\", \"parse_mode\": \"HTML\"}"
+
+  notify-telegram-cd:
+    name: Telegram Notification (CD)
+    runs-on: ubuntu-latest
+    needs: [notify-telegram-ci, argocd-sync]
+    if: always() && needs.notify-telegram-ci.outputs.ci_success == 'true' && github.ref == 'refs/heads/lab4'
+
+    steps:
+      - name: Send Telegram CD notification
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          if [[ "${{ needs.argocd-sync.result }}" == "success" ]]; then
+            EMOJI="✅"
+            DETAIL="${{ needs.argocd-sync.outputs.detail }}"
+          else
+            EMOJI="❌"
+            DETAIL="${{ needs.argocd-sync.outputs.detail }}"
+            if [[ -z "$DETAIL" ]]; then
+              DETAIL="ArgoCD sync job did not complete (result: ${{ needs.argocd-sync.result }})"
+            fi
+          fi
+
+          MESSAGE="${EMOJI} <b>Philasterion CD (ArgoCD)</b>
+
+          Branch: ${{ github.ref_name }}
+          Commit: ${SHORT_SHA}
+
+          ${DETAIL}"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
