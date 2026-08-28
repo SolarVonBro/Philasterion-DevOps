@@ -203,8 +203,28 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add k8s/backend.yaml k8s/frontend.yaml
-          git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
-          git push
+
+          if git diff --staged --quiet; then
+            echo "No manifest changes to commit."
+            exit 0
+          fi
+
+          git commit -m "ci: update image tags to ${{ github.sha }}"
+
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:lab4; then
+              echo "Pushed successfully on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo "Push rejected (attempt ${attempt}/5) - another run likely pushed first. Rebasing and retrying..."
+            git fetch origin lab4
+            git rebase origin/lab4
+            sleep $((attempt * 3))
+          done
+
+          echo "::error::Failed to push updated manifests after 5 attempts."
+          exit 1
 
   sonarqube:
     name: SonarQube Analysis

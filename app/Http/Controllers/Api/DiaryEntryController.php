@@ -72,42 +72,4 @@ class DiaryEntryController extends Controller
             abort(403);
         }
     }
-
-    public function stats(Request $request)
-    {
-        $entries = $request->user()->diaryEntries()->get();
-
-        if ($entries->isEmpty()) {
-            return response()->json([
-                'average_mood' => null,
-                'average_energy' => null,
-                'average_sleep_hours' => null,
-                'total_entries' => 0,
-            ]);
-        }
-
-        $moodSum = 0;
-        $energySum = 0;
-        $sleepSum = 0;
-        $sleepCount = 0;
-
-        foreach ($entries as $entry) {
-            $moodSum += $entry->mood;
-            $energySum += $entry->energy;
-
-            if ($entry->sleep_hours !== null) {
-                $sleepSum += $entry->sleep_hours;
-                $sleepCount++;
-            }
-        }
-
-        $count = $entries->count();
-
-        return response()->json([
-            'average_mood' => round($moodSum / $count, 2),
-            'average_energy' => round($energySum / $count, 2),
-            'average_sleep_hours' => $sleepCount > 0 ? round($sleepSum / $sleepCount, 2) : null,
-            'total_entries' => $count,
-        ]);
-    }
 }
